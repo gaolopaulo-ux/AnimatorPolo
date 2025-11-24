@@ -1,333 +1,35 @@
-local Players = game:GetService("Players")
-local player = Players.LocalPlayer
-local playerGui = player:WaitForChild("PlayerGui")
-
--- Cria ScreenGui
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AnimadorGui"
-screenGui.Parent = playerGui
-screenGui.ResetOnSpawn = false
-
--- Função para criação rápida de UI com propriedades
-local function createInstance(class, props)
-    local inst = Instance.new(class)
-    for k,v in pairs(props) do
-        inst[k] = v
-    end
-    return inst
-end
-
--- Frame principal (arrastável)
-local mainFrame = createInstance("Frame", {
-    Name = "MainFrame",
-    Parent = screenGui,
-    BackgroundColor3 = Color3.fromRGB(240, 248, 255), -- azul claro
-    Size = UDim2.new(0, 350, 0, 280),
-    Position = UDim2.new(0.5, -175, 0.5, -140),
-    Active = true,
-    Draggable = true,
-    BorderSizePixel = 2,
-    BorderColor3 = Color3.fromRGB(100, 149, 237) -- azul royal
-})
-
--- Título
-local titleLabel = createInstance("TextLabel", {
-    Parent = mainFrame,
-    Size = UDim2.new(1, 0, 0, 40),
-    BackgroundColor3 = Color3.fromRGB(230, 230, 250),
-    Text = "Animador 🎄🎅✨",
-    Font = Enum.Font.GothamBold,
-    TextSize = 24,
-    TextColor3 = Color3.fromRGB(30, 60, 100),
-    BorderSizePixel = 0
-})
-
--- Botão fechar (x)
-local closeButton = createInstance("TextButton", {
-    Parent = mainFrame,
-    Size = UDim2.new(0, 35, 0, 35),
-    Position = UDim2.new(1, -40, 0, 5),
-    BackgroundColor3 = Color3.fromRGB(255, 100, 100),
-    Text = "X",
-    Font = Enum.Font.GothamBold,
-    TextSize = 20,
-    TextColor3 = Color3.new(1,1,1),
-    AutoButtonColor = false,
-})
-
--- Botões de exportação
-local jsonButton = createInstance("TextButton", {
-    Parent = mainFrame,
-    Size = UDim2.new(0.4, 0, 0, 50),
-    Position = UDim2.new(0.05, 0, 0.3, 0),
-    BackgroundColor3 = Color3.fromRGB(240, 248, 255),
-    BorderColor3 = Color3.fromRGB(100, 149, 237),
-    Text = "Exportar JSON",
-    Font = Enum.Font.GothamBold,
-    TextSize = 18,
-    TextColor3 = Color3.fromRGB(30, 60, 100),
-    AutoButtonColor = false,
-})
-
-local keyframeButton = createInstance("TextButton", {
-    Parent = mainFrame,
-    Size = UDim2.new(0.4, 0, 0, 50),
-    Position = UDim2.new(0.55, 0, 0.3, 0),
-    BackgroundColor3 = Color3.fromRGB(240, 248, 255),
-    BorderColor3 = Color3.fromRGB(100, 149, 237),
-    Text = "Exportar Keyframes",
-    Font = Enum.Font.GothamBold,
-    TextSize = 18,
-    TextColor3 = Color3.fromRGB(30, 60, 100),
-    AutoButtonColor = false,
-})
-
--- Captura o som de clique básico
-local clickSound = Instance.new("Sound", mainFrame)
-clickSound.SoundId = "rbxassetid://2101148" -- som padrão de clique
-clickSound.Volume = 0.5
-
--- Função para tocar som sem spam e sem mensagens incômodas
-local function onButtonClick(button)
-    clickSound:Play()
-end
-
--- Conecta cliques
-jsonButton.MouseButton1Click:Connect(function()
-    onButtonClick(jsonButton)
-    -- Aqui vai a função para exportar JSON
-end)
-
-keyframeButton.MouseButton1Click:Connect(function()
-    onButtonClick(keyframeButton)
-    -- Aqui vai a função para exportar keyframes
-end)
-
-closeButton.MouseButton1Click:Connect(function()
-    onButtonClick(closeButton)
-    screenGui.Enabled = false
-end)
-
--- Remove mensagens incômodas desabilitando alertas locais (exemplo básico)
--- Roblox Lite tem limitações, mas evitar prints excessivos ajuda
-
-return
-
-local KeyframeManager = {}
-KeyframeManager.__index = KeyframeManager
-
-function KeyframeManager.new()
-    local self = setmetatable({}, KeyframeManager)
-    self.keyframes = {} -- lista para armazenar keyframes
-    return self
-end
-
--- Adiciona um keyframe
--- Parametros: tempo (number), dados (table)
-function KeyframeManager:addKeyframe(time, data)
-    table.insert(self.keyframes, {
-        time = time,
-        data = data
-    })
-    -- Ordena keyframes pelo tempo crescente
-    table.sort(self.keyframes, function(a, b) return a.time < b.time end)
-end
-
--- Remove keyframe em tempo específico, retorna true se removeu
-function KeyframeManager:removeKeyframe(time)
-    for i, kf in ipairs(self.keyframes) do
-        if kf.time == time then
-            table.remove(self.keyframes, i)
-            return true
-        end
-    end
-    return false
-end
-
--- Retorna todos os keyframes ordenados
-function KeyframeManager:getKeyframes()
-    return self.keyframes
-end
-
--- Exporta os keyframes para JSON (formato simples)
-function KeyframeManager:exportToJSON()
-    local HttpService = game:GetService("HttpService")
-    local jsonData = HttpService:JSONEncode(self.keyframes)
-    return jsonData
-end
-
--- Exporta para KeyframeSequence (formato básico, para exemplo)
-function KeyframeManager:exportToKeyframeSequence()
-    -- Estrutura simplificada, keyframes apenas com tempo e valores essenciais
-    local sequence = {}
-    for _, kf in ipairs(self.keyframes) do
-        table.insert(sequence, {
-            Time = kf.time,
-            Value = kf.data
-        })
-    end
-    return sequence
-end
-
--- Exemplo de uso:
-local animador = KeyframeManager.new()
-animador:addKeyframe(0, {pos = {x=0, y=0, z=0}})
-animador:addKeyframe(1, {pos = {x=10, y=5, z=0}})
-animador:removeKeyframe(0)
-local json = animador:exportToJSON()
-local seq = animador:exportToKeyframeSequence()
-
--- Retornamos o gerenciador para integração com o gui da Parte 1
-return animador
+-- AnimatorPolo - LocalScript (versão melhorada)
+-- Coloque em StarterPlayerScripts (ou onde você use para executar GUI)
+-- Comentários em pt-BR para facilitar edição
 
 local Players = game:GetService("Players")
 local HttpService = game:GetService("HttpService")
+local TweenService = game:GetService("TweenService")
+
 local player = Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
--- Reutiliza e cria ScreenGui e frame principal
-local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "AnimadorGui"
-screenGui.Parent = playerGui
-screenGui.ResetOnSpawn = false
+-- Cria ScreenGui apenas se não existir
+local screenGui = playerGui:FindFirstChild("AnimadorGui")
+if not screenGui then
+    screenGui = Instance.new("ScreenGui")
+    screenGui.Name = "AnimadorGui"
+    screenGui.ResetOnSpawn = false
+    screenGui.Parent = playerGui
+end
 
-local function createInstance(class, props)
+-- Função utilitária para criar instâncias com propriedades
+local function create(class, props)
     local inst = Instance.new(class)
-    for k,v in pairs(props) do
-        inst[k] = v
+    if props then
+        for k,v in pairs(props) do
+            inst[k] = v
+        end
     end
     return inst
 end
 
-local mainFrame = createInstance("Frame", {
-    Name = "MainFrame",
-    Parent = screenGui,
-    BackgroundColor3 = Color3.fromRGB(240, 248, 255),
-    Size = UDim2.new(0, 350, 0, 400),
-    Position = UDim2.new(0.5, -175, 0.5, -200),
-    Active = true,
-    Draggable = true,
-    BorderSizePixel = 2,
-    BorderColor3 = Color3.fromRGB(100, 149, 237)
-})
-
-local titleLabel = createInstance("TextLabel", {
-    Parent = mainFrame,
-    Size = UDim2.new(1, 0, 0, 40),
-    BackgroundColor3 = Color3.fromRGB(230, 230, 250),
-    Text = "Animador 🎄🎅✨",
-    Font = Enum.Font.GothamBold,
-    TextSize = 24,
-    TextColor3 = Color3.fromRGB(30, 60, 100),
-    BorderSizePixel = 0
-})
-
-local closeButton = createInstance("TextButton", {
-    Parent = mainFrame,
-    Size = UDim2.new(0, 35, 0, 35),
-    Position = UDim2.new(1, -40, 0, 5),
-    BackgroundColor3 = Color3.fromRGB(255, 100, 100),
-    Text = "X",
-    Font = Enum.Font.GothamBold,
-    TextSize = 20,
-    TextColor3 = Color3.new(1,1,1),
-    AutoButtonColor = false,
-})
-
-local jsonButton = createInstance("TextButton", {
-    Parent = mainFrame,
-    Size = UDim2.new(0.4, 0, 0, 50),
-    Position = UDim2.new(0.05, 0, 0.3, 0),
-    BackgroundColor3 = Color3.fromRGB(240, 248, 255),
-    BorderColor3 = Color3.fromRGB(100, 149, 237),
-    Text = "Exportar JSON",
-    Font = Enum.Font.GothamBold,
-    TextSize = 18,
-    TextColor3 = Color3.fromRGB(30, 60, 100),
-    AutoButtonColor = false,
-})
-
-local keyframeButton = createInstance("TextButton", {
-    Parent = mainFrame,
-    Size = UDim2.new(0.4, 0, 0, 50),
-    Position = UDim2.new(0.55, 0, 0.3, 0),
-    BackgroundColor3 = Color3.fromRGB(240, 248, 255),
-    BorderColor3 = Color3.fromRGB(100, 149, 237),
-    Text = "Exportar Keyframes",
-    Font = Enum.Font.GothamBold,
-    TextSize = 18,
-    TextColor3 = Color3.fromRGB(30, 60, 100),
-    AutoButtonColor = false,
-})
-
--- Lista de keyframes exibida
-local keyframeList = createInstance("TextLabel", {
-    Parent = mainFrame,
-    Size = UDim2.new(0.9, 0, 0.5, 0),
-    Position = UDim2.new(0.05, 0, 0.45, 0),
-    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
-    BorderColor3 = Color3.fromRGB(100, 149, 237),
-    TextColor3 = Color3.fromRGB(0, 0, 0),
-    Font = Enum.Font.Gotham,
-    TextSize = 16,
-    Text = "Lista de Keyframes:
-(tempo : dados)...",
-    TextWrapped = true,
-    TextYAlignment = Enum.TextYAlignment.Top,
-    TextXAlignment = Enum.TextXAlignment.Left
-})
-
--- Campo para adicionar keyframe (tempo)
-local inputTime = createInstance("TextBox", {
-    Parent = mainFrame,
-    Size = UDim2.new(0.4, 0, 0, 30),
-    Position = UDim2.new(0.05, 0, 0.95, -35),
-    PlaceholderText = "Tempo (segundos)",
-    ClearTextOnFocus = false,
-    Font = Enum.Font.Gotham,
-    TextSize = 14,
-    TextColor3 = Color3.new(0,0,0),
-    BackgroundColor3 = Color3.new(1,1,1),
-    BorderColor3 = Color3.fromRGB(100, 149, 237),
-})
-
--- Campo para adicionar keyframe (dados simples)
-local inputData = createInstance("TextBox", {
-    Parent = mainFrame,
-    Size = UDim2.new(0.4, 0, 0, 30),
-    Position = UDim2.new(0.55, 0, 0.95, -35),
-    PlaceholderText = "Dados (JSON simples)",
-    ClearTextOnFocus = false,
-    Font = Enum.Font.Gotham,
-    TextSize = 14,
-    TextColor3 = Color3.new(0,0,0),
-    BackgroundColor3 = Color3.new(1,1,1),
-    BorderColor3 = Color3.fromRGB(100, 149, 237),
-})
-
--- Botão para adicionar keyframe na lista
-local addButton = createInstance("TextButton", {
-    Parent = mainFrame,
-    Size = UDim2.new(0.9, 0, 0, 30),
-    Position = UDim2.new(0.05, 0, 1, -30),
-    BackgroundColor3 = Color3.fromRGB(100, 149, 237),
-    Text = "Adicionar Keyframe",
-    Font = Enum.Font.GothamBold,
-    TextSize = 16,
-    TextColor3 = Color3.new(1,1,1),
-    AutoButtonColor = false,
-})
-
--- Som de clique
-local clickSound = Instance.new("Sound", mainFrame)
-clickSound.SoundId = "rbxassetid://2101148"
-clickSound.Volume = 0.5
-
-local function playClick()
-    clickSound:Play()
-end
-
--- Gerenciador de Keyframes (parte 2)
+-- KeyframeManager modularizado
 local KeyframeManager = {}
 KeyframeManager.__index = KeyframeManager
 
@@ -338,7 +40,256 @@ function KeyframeManager.new()
 end
 
 function KeyframeManager:addKeyframe(time, data)
-    table.insert(self.keyframes, {
+    if type(time) ~= "number" or time < 0 then return false, "tempo inválido" end
+    table.insert(self.keyframes, { time = time, data = data })
+    table.sort(self.keyframes, function(a,b) return a.time < b.time end)
+    return true
+end
+
+function KeyframeManager:removeKeyframeAtIndex(i)
+    if type(i) ~= "number" or not self.keyframes[i] then return false end
+    table.remove(self.keyframes, i)
+    return true
+end
+
+function KeyframeManager:getKeyframes()
+    return self.keyframes
+end
+
+function KeyframeManager:exportToJSON(pretty)
+    if pretty then
+        return HttpService:JSONEncode(self.keyframes) -- Roblox não tem pretty nativo fácil; mantém compact
+    else
+        return HttpService:JSONEncode(self.keyframes)
+    end
+end
+
+function KeyframeManager:importFromJSON(jsonText)
+    local ok, t = pcall(HttpService.JSONDecode, HttpService, jsonText)
+    if not ok then return false, "JSON inválido" end
+    if type(t) ~= "table" then return false, "JSON não é uma lista de keyframes" end
+    self.keyframes = {}
+    for _, v in ipairs(t) do
+        -- validação mínima
+        if type(v.time) == "number" and type(v.data) == "table" then
+            table.insert(self.keyframes, v)
+        end
+    end
+    table.sort(self.keyframes, function(a,b) return a.time < b.time end)
+    return true
+end
+
+function KeyframeManager:exportToKeyframeSequenceString()
+    -- Gera uma string Lua formatada com a sequência para copiar/colar no Studio
+    local out = {"-- KeyframeSequence gerado por AnimatorPolo\nlocal sequence = {\n"}
+    for _, kf in ipairs(self.keyframes) do
+        local dataJson = HttpService:JSONEncode(kf.data)
+        table.insert(out, string.format("    { Time = %.4f, Value = %s },\n", kf.time, dataJson))
+    end
+    table.insert(out, "}\nreturn sequence")
+    return table.concat(out, "")
+end
+
+-- instancia o gerenciador
+local animador = KeyframeManager.new()
+
+-- === GUI ===
+local mainFrame = screenGui:FindFirstChild("MainFrame")
+if not mainFrame then
+    mainFrame = create("Frame", {
+        Name = "MainFrame",
+        Parent = screenGui,
+        Size = UDim2.new(0, 380, 0, 460),
+        Position = UDim2.new(0.5, -190, 0.5, -230),
+        BackgroundColor3 = Color3.fromRGB(240,248,255),
+        Active = true,
+        Draggable = true,
+        BorderSizePixel = 2,
+        BorderColor3 = Color3.fromRGB(100,149,237)
+    })
+end
+
+-- Título
+local title = mainFrame:FindFirstChild("Title")
+if not title then
+    title = create("TextLabel", {
+        Name = "Title", Parent = mainFrame,
+        Size = UDim2.new(1,0,0,42), Position = UDim2.new(0,0,0,0),
+        BackgroundColor3 = Color3.fromRGB(230,230,250), Text = "Animador ✨",
+        Font = Enum.Font.GothamBold, TextSize = 24, TextColor3 = Color3.fromRGB(30,60,100)
+    })
+end
+
+-- Close button
+local closeButton = mainFrame:FindFirstChild("CloseButton")
+if not closeButton then
+    closeButton = create("TextButton", {
+        Name = "CloseButton", Parent = mainFrame,
+        Size = UDim2.new(0,36,0,36), Position = UDim2.new(1,-44,0,4),
+        Text = "X", Font = Enum.Font.GothamBold, TextSize = 20, AutoButtonColor = false,
+        BackgroundColor3 = Color3.fromRGB(255,100,100), TextColor3 = Color3.new(1,1,1)
+    })
+end
+
+closeButton.MouseButton1Click:Connect(function()
+    mainFrame.Visible = false
+end)
+
+-- Inputs (tempo e dados)
+local inputTime = mainFrame:FindFirstChild("InputTime")
+if not inputTime then
+    inputTime = create("TextBox", {
+        Name = "InputTime", Parent = mainFrame,
+        Size = UDim2.new(0.46,0,0,32), Position = UDim2.new(0.03,0,0.78,0),
+        PlaceholderText = "Tempo (segundos)", ClearTextOnFocus = false, Font = Enum.Font.Gotham, TextSize = 14
+    })
+end
+
+local inputData = mainFrame:FindFirstChild("InputData")
+if not inputData then
+    inputData = create("TextBox", {
+        Name = "InputData", Parent = mainFrame,
+        Size = UDim2.new(0.46,0,0,32), Position = UDim2.new(0.51,0,0.78,0),
+        PlaceholderText = 'Dados (ex: {"pos":{x:0,y:0,z:0}})', ClearTextOnFocus = false, MultiLine = false, Font = Enum.Font.Gotham, TextSize = 14
+    })
+end
+
+-- Botões
+local addBtn = mainFrame:FindFirstChild("AddBtn")
+if not addBtn then
+    addBtn = create("TextButton", {
+        Name = "AddBtn", Parent = mainFrame,
+        Size = UDim2.new(0.94,0,0,34), Position = UDim2.new(0.03,0,0.85,0),
+        Text = "Adicionar Keyframe", Font = Enum.Font.GothamBold, TextSize = 16, TextColor3 = Color3.new(1,1,1),
+        BackgroundColor3 = Color3.fromRGB(100,149,237), AutoButtonColor = false
+    })
+end
+
+local exportJSONBtn = mainFrame:FindFirstChild("ExportJSON")
+if not exportJSONBtn then
+    exportJSONBtn = create("TextButton", {
+        Name = "ExportJSON", Parent = mainFrame,
+        Size = UDim2.new(0.46,0,0,34), Position = UDim2.new(0.03,0,0.65,0),
+        Text = "Exportar JSON", Font = Enum.Font.GothamBold, TextSize = 14, AutoButtonColor = false
+    })
+end
+
+local importJSONBtn = mainFrame:FindFirstChild("ImportJSON")
+if not importJSONBtn then
+    importJSONBtn = create("TextButton", {
+        Name = "ImportJSON", Parent = mainFrame,
+        Size = UDim2.new(0.46,0,0,34), Position = UDim2.new(0.51,0,0.65,0),
+        Text = "Importar JSON", Font = Enum.Font.GothamBold, TextSize = 14, AutoButtonColor = false
+    })
+end
+
+local genScriptBtn = mainFrame:FindFirstChild("GenScript")
+if not genScriptBtn then
+    genScriptBtn = create("TextButton", {
+        Name = "GenScript", Parent = mainFrame,
+        Size = UDim2.new(0.94,0,0,30), Position = UDim2.new(0.03,0,0.58,0),
+        Text = "Gerar Script (copiar/colar)", Font = Enum.Font.GothamBold, TextSize = 14
+    })
+end
+
+-- Área rolável para lista de keyframes
+local scroll = mainFrame:FindFirstChild("KFScroll")
+if not scroll then
+    scroll = create("ScrollingFrame", {
+        Name = "KFScroll", Parent = mainFrame,
+        Size = UDim2.new(0.94,0,0.52,0), Position = UDim2.new(0.03,0,0.06,0),
+        CanvasSize = UDim2.new(0,0,0,0), BackgroundColor3 = Color3.fromRGB(255,255,255),
+        BorderColor3 = Color3.fromRGB(200,200,200)
+    })
+    local uiList = create("UIListLayout", {Parent = scroll, Padding = UDim.new(0,6)})
+    uiList.SortOrder = Enum.SortOrder.LayoutOrder
+end
+
+local function refreshUI()
+    -- limpa
+    for _, child in ipairs(scroll:GetChildren()) do
+        if child:IsA("TextLabel") or child:IsA("TextButton") then child:Destroy() end
+    end
+
+    local count = 0
+    for i, kf in ipairs(animador:getKeyframes()) do
+        count = count + 1
+        local line = create("Frame", {Parent = scroll, Size = UDim2.new(1,0,0,36)})
+        local lbl = create("TextLabel", {
+            Parent = line, Size = UDim2.new(0.8,0,1,0), Position = UDim2.new(0,4,0,0),
+            BackgroundTransparency = 1, Text = string.format("Tempo: %.3f  |  Dados: %s", kf.time, HttpService:JSONEncode(kf.data)),
+            TextXAlignment = Enum.TextXAlignment.Left, Font = Enum.Font.Gotham, TextSize = 14
+        })
+        local del = create("TextButton", {
+            Parent = line, Size = UDim2.new(0.18, -8, 1, -4), Position = UDim2.new(0.82, 4, 0, 2),
+            Text = "Rem", Font = Enum.Font.GothamBold, TextSize = 14, BackgroundColor3 = Color3.fromRGB(230,80,80)
+        })
+        del.MouseButton1Click:Connect(function()
+            animador:removeKeyframeAtIndex(i)
+            refreshUI()
+        end)
+    end
+    scroll.CanvasSize = UDim2.new(0,0,0, 40 * count)
+end
+
+-- botão adicionar
+addBtn.MouseButton1Click:Connect(function()
+    local t = tonumber(inputTime.Text)
+    local ok, data = pcall(function() return HttpService:JSONDecode(inputData.Text) end)
+    if not t or not ok then
+        -- mensagem rápida no título
+        title.Text = "Erro: tempo inválido ou JSON dos dados incorreto"
+        wait(1.2)
+        title.Text = "Animador ✨"
+        return
+    end
+    animador:addKeyframe(t, data)
+    inputTime.Text = ""
+    inputData.Text = ""
+    refreshUI()
+end)
+
+-- exportar json (mostra num TextBox modal)
+exportJSONBtn.MouseButton1Click:Connect(function()
+    local json = animador:exportToJSON()
+    -- abrir uma pequena janela com o texto para copiar
+    local win = create("Frame", {Parent = screenGui, Size = UDim2.new(0.6,0,0.5,0), Position = UDim2.new(0.2,0,0.25,0), BackgroundColor3 = Color3.fromRGB(245,245,250), BorderSizePixel = 2})
+    local tb = create("TextBox", {Parent = win, Size = UDim2.new(1,-10,1,-40), Position = UDim2.new(0,5,0,35), MultiLine = true, Text = json, ClearTextOnFocus = false, Font = Enum.Font.Gotham})
+    local ok = create("TextButton", {Parent = win, Size = UDim2.new(0.2,0,0,30), Position = UDim2.new(0.8,0,0,4), Text = "Fechar"})
+    ok.MouseButton1Click:Connect(function() win:Destroy() end)
+end)
+
+-- importar json (abre prompt e tenta importar)
+importJSONBtn.MouseButton1Click:Connect(function()
+    local win = create("Frame", {Parent = screenGui, Size = UDim2.new(0.6,0,0.5,0), Position = UDim2.new(0.2,0,0.25,0), BackgroundColor3 = Color3.fromRGB(255,255,255), BorderSizePixel = 2})
+    local tb = create("TextBox", {Parent = win, Size = UDim2.new(1,-10,1,-40), Position = UDim2.new(0,5,0,35), MultiLine = true, PlaceholderText = "Cole JSON aqui", ClearTextOnFocus = false, Font = Enum.Font.Gotham})
+    local ok = create("TextButton", {Parent = win, Size = UDim2.new(0.2,0,0,30), Position = UDim2.new(0.6,0,0,4), Text = "Importar"})
+    local close = create("TextButton", {Parent = win, Size = UDim2.new(0.2,0,0,30), Position = UDim2.new(0.8,0,0,4), Text = "Fechar"})
+    ok.MouseButton1Click:Connect(function()
+        local success, err = animador:importFromJSON(tb.Text)
+        if not success then
+            title.Text = "Erro: "..(err or "import")
+            wait(1.4)
+            title.Text = "Animador ✨"
+        else
+            refreshUI()
+            win:Destroy()
+        end
+    end)
+    close.MouseButton1Click:Connect(function() win:Destroy() end)
+end)
+
+-- gerar script pronto pra copiar/colar
+genScriptBtn.MouseButton1Click:Connect(function()
+    local scriptText = animador:exportToKeyframeSequenceString()
+    local win = create("Frame", {Parent = screenGui, Size = UDim2.new(0.6,0,0.5,0), Position = UDim2.new(0.2,0,0.25,0), BackgroundColor3 = Color3.fromRGB(245,245,250), BorderSizePixel = 2})
+    local tb = create("TextBox", {Parent = win, Size = UDim2.new(1,-10,1,-40), Position = UDim2.new(0,5,0,35), MultiLine = true, Text = scriptText, ClearTextOnFocus = false, Font = Enum.Font.Gotham})
+    local ok = create("TextButton", {Parent = win, Size = UDim2.new(0.2,0,0,30), Position = UDim2.new(0.8,0,0,4), Text = "Fechar"})
+    ok.MouseButton1Click:Connect(function() win:Destroy() end)
+end)
+
+-- inicializa UI vazia
+refreshUI()f.keyframes, {
         time = time,
         data = data
     })
