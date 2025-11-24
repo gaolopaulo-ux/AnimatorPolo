@@ -1,0 +1,542 @@
+local Players = game:GetService("Players")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Cria ScreenGui
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AnimadorGui"
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+
+-- Função para criação rápida de UI com propriedades
+local function createInstance(class, props)
+    local inst = Instance.new(class)
+    for k,v in pairs(props) do
+        inst[k] = v
+    end
+    return inst
+end
+
+-- Frame principal (arrastável)
+local mainFrame = createInstance("Frame", {
+    Name = "MainFrame",
+    Parent = screenGui,
+    BackgroundColor3 = Color3.fromRGB(240, 248, 255), -- azul claro
+    Size = UDim2.new(0, 350, 0, 280),
+    Position = UDim2.new(0.5, -175, 0.5, -140),
+    Active = true,
+    Draggable = true,
+    BorderSizePixel = 2,
+    BorderColor3 = Color3.fromRGB(100, 149, 237) -- azul royal
+})
+
+-- Título
+local titleLabel = createInstance("TextLabel", {
+    Parent = mainFrame,
+    Size = UDim2.new(1, 0, 0, 40),
+    BackgroundColor3 = Color3.fromRGB(230, 230, 250),
+    Text = "Animador 🎄🎅✨",
+    Font = Enum.Font.GothamBold,
+    TextSize = 24,
+    TextColor3 = Color3.fromRGB(30, 60, 100),
+    BorderSizePixel = 0
+})
+
+-- Botão fechar (x)
+local closeButton = createInstance("TextButton", {
+    Parent = mainFrame,
+    Size = UDim2.new(0, 35, 0, 35),
+    Position = UDim2.new(1, -40, 0, 5),
+    BackgroundColor3 = Color3.fromRGB(255, 100, 100),
+    Text = "X",
+    Font = Enum.Font.GothamBold,
+    TextSize = 20,
+    TextColor3 = Color3.new(1,1,1),
+    AutoButtonColor = false,
+})
+
+-- Botões de exportação
+local jsonButton = createInstance("TextButton", {
+    Parent = mainFrame,
+    Size = UDim2.new(0.4, 0, 0, 50),
+    Position = UDim2.new(0.05, 0, 0.3, 0),
+    BackgroundColor3 = Color3.fromRGB(240, 248, 255),
+    BorderColor3 = Color3.fromRGB(100, 149, 237),
+    Text = "Exportar JSON",
+    Font = Enum.Font.GothamBold,
+    TextSize = 18,
+    TextColor3 = Color3.fromRGB(30, 60, 100),
+    AutoButtonColor = false,
+})
+
+local keyframeButton = createInstance("TextButton", {
+    Parent = mainFrame,
+    Size = UDim2.new(0.4, 0, 0, 50),
+    Position = UDim2.new(0.55, 0, 0.3, 0),
+    BackgroundColor3 = Color3.fromRGB(240, 248, 255),
+    BorderColor3 = Color3.fromRGB(100, 149, 237),
+    Text = "Exportar Keyframes",
+    Font = Enum.Font.GothamBold,
+    TextSize = 18,
+    TextColor3 = Color3.fromRGB(30, 60, 100),
+    AutoButtonColor = false,
+})
+
+-- Captura o som de clique básico
+local clickSound = Instance.new("Sound", mainFrame)
+clickSound.SoundId = "rbxassetid://2101148" -- som padrão de clique
+clickSound.Volume = 0.5
+
+-- Função para tocar som sem spam e sem mensagens incômodas
+local function onButtonClick(button)
+    clickSound:Play()
+end
+
+-- Conecta cliques
+jsonButton.MouseButton1Click:Connect(function()
+    onButtonClick(jsonButton)
+    -- Aqui vai a função para exportar JSON
+end)
+
+keyframeButton.MouseButton1Click:Connect(function()
+    onButtonClick(keyframeButton)
+    -- Aqui vai a função para exportar keyframes
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    onButtonClick(closeButton)
+    screenGui.Enabled = false
+end)
+
+-- Remove mensagens incômodas desabilitando alertas locais (exemplo básico)
+-- Roblox Lite tem limitações, mas evitar prints excessivos ajuda
+
+return
+
+local KeyframeManager = {}
+KeyframeManager.__index = KeyframeManager
+
+function KeyframeManager.new()
+    local self = setmetatable({}, KeyframeManager)
+    self.keyframes = {} -- lista para armazenar keyframes
+    return self
+end
+
+-- Adiciona um keyframe
+-- Parametros: tempo (number), dados (table)
+function KeyframeManager:addKeyframe(time, data)
+    table.insert(self.keyframes, {
+        time = time,
+        data = data
+    })
+    -- Ordena keyframes pelo tempo crescente
+    table.sort(self.keyframes, function(a, b) return a.time < b.time end)
+end
+
+-- Remove keyframe em tempo específico, retorna true se removeu
+function KeyframeManager:removeKeyframe(time)
+    for i, kf in ipairs(self.keyframes) do
+        if kf.time == time then
+            table.remove(self.keyframes, i)
+            return true
+        end
+    end
+    return false
+end
+
+-- Retorna todos os keyframes ordenados
+function KeyframeManager:getKeyframes()
+    return self.keyframes
+end
+
+-- Exporta os keyframes para JSON (formato simples)
+function KeyframeManager:exportToJSON()
+    local HttpService = game:GetService("HttpService")
+    local jsonData = HttpService:JSONEncode(self.keyframes)
+    return jsonData
+end
+
+-- Exporta para KeyframeSequence (formato básico, para exemplo)
+function KeyframeManager:exportToKeyframeSequence()
+    -- Estrutura simplificada, keyframes apenas com tempo e valores essenciais
+    local sequence = {}
+    for _, kf in ipairs(self.keyframes) do
+        table.insert(sequence, {
+            Time = kf.time,
+            Value = kf.data
+        })
+    end
+    return sequence
+end
+
+-- Exemplo de uso:
+local animador = KeyframeManager.new()
+animador:addKeyframe(0, {pos = {x=0, y=0, z=0}})
+animador:addKeyframe(1, {pos = {x=10, y=5, z=0}})
+animador:removeKeyframe(0)
+local json = animador:exportToJSON()
+local seq = animador:exportToKeyframeSequence()
+
+-- Retornamos o gerenciador para integração com o gui da Parte 1
+return animador
+
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+-- Reutiliza e cria ScreenGui e frame principal
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "AnimadorGui"
+screenGui.Parent = playerGui
+screenGui.ResetOnSpawn = false
+
+local function createInstance(class, props)
+    local inst = Instance.new(class)
+    for k,v in pairs(props) do
+        inst[k] = v
+    end
+    return inst
+end
+
+local mainFrame = createInstance("Frame", {
+    Name = "MainFrame",
+    Parent = screenGui,
+    BackgroundColor3 = Color3.fromRGB(240, 248, 255),
+    Size = UDim2.new(0, 350, 0, 400),
+    Position = UDim2.new(0.5, -175, 0.5, -200),
+    Active = true,
+    Draggable = true,
+    BorderSizePixel = 2,
+    BorderColor3 = Color3.fromRGB(100, 149, 237)
+})
+
+local titleLabel = createInstance("TextLabel", {
+    Parent = mainFrame,
+    Size = UDim2.new(1, 0, 0, 40),
+    BackgroundColor3 = Color3.fromRGB(230, 230, 250),
+    Text = "Animador 🎄🎅✨",
+    Font = Enum.Font.GothamBold,
+    TextSize = 24,
+    TextColor3 = Color3.fromRGB(30, 60, 100),
+    BorderSizePixel = 0
+})
+
+local closeButton = createInstance("TextButton", {
+    Parent = mainFrame,
+    Size = UDim2.new(0, 35, 0, 35),
+    Position = UDim2.new(1, -40, 0, 5),
+    BackgroundColor3 = Color3.fromRGB(255, 100, 100),
+    Text = "X",
+    Font = Enum.Font.GothamBold,
+    TextSize = 20,
+    TextColor3 = Color3.new(1,1,1),
+    AutoButtonColor = false,
+})
+
+local jsonButton = createInstance("TextButton", {
+    Parent = mainFrame,
+    Size = UDim2.new(0.4, 0, 0, 50),
+    Position = UDim2.new(0.05, 0, 0.3, 0),
+    BackgroundColor3 = Color3.fromRGB(240, 248, 255),
+    BorderColor3 = Color3.fromRGB(100, 149, 237),
+    Text = "Exportar JSON",
+    Font = Enum.Font.GothamBold,
+    TextSize = 18,
+    TextColor3 = Color3.fromRGB(30, 60, 100),
+    AutoButtonColor = false,
+})
+
+local keyframeButton = createInstance("TextButton", {
+    Parent = mainFrame,
+    Size = UDim2.new(0.4, 0, 0, 50),
+    Position = UDim2.new(0.55, 0, 0.3, 0),
+    BackgroundColor3 = Color3.fromRGB(240, 248, 255),
+    BorderColor3 = Color3.fromRGB(100, 149, 237),
+    Text = "Exportar Keyframes",
+    Font = Enum.Font.GothamBold,
+    TextSize = 18,
+    TextColor3 = Color3.fromRGB(30, 60, 100),
+    AutoButtonColor = false,
+})
+
+-- Lista de keyframes exibida
+local keyframeList = createInstance("TextLabel", {
+    Parent = mainFrame,
+    Size = UDim2.new(0.9, 0, 0.5, 0),
+    Position = UDim2.new(0.05, 0, 0.45, 0),
+    BackgroundColor3 = Color3.fromRGB(255, 255, 255),
+    BorderColor3 = Color3.fromRGB(100, 149, 237),
+    TextColor3 = Color3.fromRGB(0, 0, 0),
+    Font = Enum.Font.Gotham,
+    TextSize = 16,
+    Text = "Lista de Keyframes:
+(tempo : dados)...",
+    TextWrapped = true,
+    TextYAlignment = Enum.TextYAlignment.Top,
+    TextXAlignment = Enum.TextXAlignment.Left
+})
+
+-- Campo para adicionar keyframe (tempo)
+local inputTime = createInstance("TextBox", {
+    Parent = mainFrame,
+    Size = UDim2.new(0.4, 0, 0, 30),
+    Position = UDim2.new(0.05, 0, 0.95, -35),
+    PlaceholderText = "Tempo (segundos)",
+    ClearTextOnFocus = false,
+    Font = Enum.Font.Gotham,
+    TextSize = 14,
+    TextColor3 = Color3.new(0,0,0),
+    BackgroundColor3 = Color3.new(1,1,1),
+    BorderColor3 = Color3.fromRGB(100, 149, 237),
+})
+
+-- Campo para adicionar keyframe (dados simples)
+local inputData = createInstance("TextBox", {
+    Parent = mainFrame,
+    Size = UDim2.new(0.4, 0, 0, 30),
+    Position = UDim2.new(0.55, 0, 0.95, -35),
+    PlaceholderText = "Dados (JSON simples)",
+    ClearTextOnFocus = false,
+    Font = Enum.Font.Gotham,
+    TextSize = 14,
+    TextColor3 = Color3.new(0,0,0),
+    BackgroundColor3 = Color3.new(1,1,1),
+    BorderColor3 = Color3.fromRGB(100, 149, 237),
+})
+
+-- Botão para adicionar keyframe na lista
+local addButton = createInstance("TextButton", {
+    Parent = mainFrame,
+    Size = UDim2.new(0.9, 0, 0, 30),
+    Position = UDim2.new(0.05, 0, 1, -30),
+    BackgroundColor3 = Color3.fromRGB(100, 149, 237),
+    Text = "Adicionar Keyframe",
+    Font = Enum.Font.GothamBold,
+    TextSize = 16,
+    TextColor3 = Color3.new(1,1,1),
+    AutoButtonColor = false,
+})
+
+-- Som de clique
+local clickSound = Instance.new("Sound", mainFrame)
+clickSound.SoundId = "rbxassetid://2101148"
+clickSound.Volume = 0.5
+
+local function playClick()
+    clickSound:Play()
+end
+
+-- Gerenciador de Keyframes (parte 2)
+local KeyframeManager = {}
+KeyframeManager.__index = KeyframeManager
+
+function KeyframeManager.new()
+    local self = setmetatable({}, KeyframeManager)
+    self.keyframes = {}
+    return self
+end
+
+function KeyframeManager:addKeyframe(time, data)
+    table.insert(self.keyframes, {
+        time = time,
+        data = data
+    })
+    table.sort(self.keyframes, function(a,b) return a.time < b.time end)
+end
+
+function KeyframeManager:getKeyframes()
+    return self.keyframes
+end
+
+function KeyframeManager:exportToJSON()
+    return HttpService:JSONEncode(self.keyframes)
+end
+
+function KeyframeManager:exportToKeyframeSequence()
+    local sequence = {}
+    for _, kf in ipairs(self.keyframes) do
+        table.insert(sequence, {
+            Time = kf.time,
+            Value = kf.data
+        })
+    end
+    return sequence
+end
+
+local animador = KeyframeManager.new()
+
+local function refreshKeyframeList()
+    local lines = {"Lista de Keyframes:"}
+    for _, kf in ipairs(animador:getKeyframes()) do
+        table.insert(lines, string.format("Tempo: %.2f, Dados: %s", kf.time, HttpService:JSONEncode(kf.data)))
+    end
+    keyframeList.Text = table.concat(lines, "
+")
+end
+
+addButton.MouseButton1Click:Connect(function()
+    playClick()
+    local time = tonumber(inputTime.Text)
+    local success, data = pcall(function() return HttpService:JSONDecode(inputData.Text) end)
+    if not time or not success then
+        keyframeList.Text = "Erro: Tempo inválido ou dados JSON incorretos."
+        return
+    end
+    animador:addKeyframe(time, data)
+    refreshKeyframeList()
+    inputTime.Text = ""
+    inputData.Text = ""
+end)
+
+jsonButton.MouseButton1Click:Connect(function()
+    playClick()
+    local jsonExport = animador:exportToJSON()
+    keyframeList.Text = "Exportação JSON:
+" .. jsonExport
+end)
+
+keyframeButton.MouseButton1Click:Connect(function()
+    playClick()
+    local seqExport = animador:exportToKeyframeSequence()
+    local text = "Exportação KeyframeSequence:
+"
+    for _, entry in ipairs(seqExport) do
+        text = text .. string.format("Time: %.2f, Value: %s
+", entry.Time, HttpService:JSONEncode(entry.Value))
+    end
+    keyframeList.Text = text
+end)
+
+closeButton.MouseButton1Click:Connect(function()
+    playClick()
+    screenGui.Enabled = false
+end)
+
+-- Inicializa com refresh para mostrar vazio
+refreshKeyframeList()
+
+local Players = game:GetService("Players")
+local HttpService = game:GetService("HttpService")
+local player = Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = playerGui:FindFirstChild("AnimadorGui")
+if not screenGui then
+    warn("GUI não encontrada. Execute a Parte 3 antes.")
+    return
+end
+
+local mainFrame = screenGui:WaitForChild("MainFrame")
+
+-- Criar frame para seleção de scripts animados e área de exibição
+local scriptFrame = Instance.new("Frame")
+scriptFrame.Name = "ScriptFrame"
+scriptFrame.Size = UDim2.new(0, 340, 0, 220)
+scriptFrame.Position = UDim2.new(0.02, 0, 0.6, 0)
+scriptFrame.BackgroundColor3 = Color3.fromRGB(230, 240, 255)
+scriptFrame.BorderColor3 = Color3.fromRGB(100, 149, 237)
+scriptFrame.Visible = false
+scriptFrame.Parent = mainFrame
+
+local scriptClose = Instance.new("TextButton")
+scriptClose.Name = "ScriptClose"
+scriptClose.Size = UDim2.new(0, 30, 0, 30)
+scriptClose.Position = UDim2.new(1, -35, 0, 5)
+scriptClose.Text = "X"
+scriptClose.BackgroundColor3 = Color3.fromRGB(255, 100, 100)
+scriptClose.Font = Enum.Font.GothamBold
+scriptClose.TextSize = 20
+scriptClose.TextColor3 = Color3.new(1,1,1)
+scriptClose.Parent = scriptFrame
+scriptClose.AutoButtonColor = false
+
+local scriptTitle = Instance.new("TextLabel")
+scriptTitle.Name = "ScriptTitle"
+scriptTitle.Size = UDim2.new(1, -40, 0, 30)
+scriptTitle.Position = UDim2.new(0, 5, 0, 5)
+scriptTitle.BackgroundTransparency = 1
+scriptTitle.Font = Enum.Font.GothamBold
+scriptTitle.TextSize = 20
+scriptTitle.TextColor3 = Color3.fromRGB(30, 60, 100)
+scriptTitle.TextXAlignment = Enum.TextXAlignment.Left
+scriptTitle.Parent = scriptFrame
+
+local scriptTextBox = Instance.new("TextBox")
+scriptTextBox.Name = "ScriptTextBox"
+scriptTextBox.Size = UDim2.new(1, -10, 1, -45)
+scriptTextBox.Position = UDim2.new(0, 5, 0, 35)
+scriptTextBox.MultiLine = true
+scriptTextBox.ClearTextOnFocus = false
+scriptTextBox.TextWrapped = true
+scriptTextBox.Font = Enum.Font.Gotham
+scriptTextBox.TextSize = 14
+scriptTextBox.TextColor3 = Color3.new(0,0,0)
+scriptTextBox.BackgroundColor3 = Color3.new(1,1,1)
+scriptTextBox.Parent = scriptFrame
+
+-- Criação dos botões para scripts animados
+local animations = {"Idle", "Walk", "Run", "Jump", "Fall"}
+
+local animButtons = {}
+for i, animName in ipairs(animations) do
+    local btn = Instance.new("TextButton")
+    btn.Name = animName .. "Button"
+    btn.Size = UDim2.new(0, 60, 0, 30)
+    btn.Position = UDim2.new(0, 10 + (i-1)*65, 0, 10)
+    btn.BackgroundColor3 = Color3.fromRGB(100, 149, 237)
+    btn.Text = animName
+    btn.Font = Enum.Font.GothamBold
+    btn.TextSize = 16
+    btn.TextColor3 = Color3.new(1,1,1)
+    btn.Parent = mainFrame
+    btn.AutoButtonColor = false
+    animButtons[animName] = btn
+end
+
+local clickSound = mainFrame:FindFirstChildOfClass("Sound") or Instance.new("Sound", mainFrame)
+clickSound.SoundId = "rbxassetid://2101148"
+clickSound.Volume = 0.5
+
+local function playClick()
+    clickSound:Play()
+end
+
+local animador = require(script.Parent:WaitForChild("AnimadorModule")) -- Assumindo que a Parte 2 está em AnimadorModule
+
+-- Função geradora padrão de script animado por tipo
+local function generateAnimationScript(animType)
+    local keyframes = animador:getKeyframes()
+    -- Script exemplo simples: define estados de animação baseados no tipo
+    local scriptLines = {
+        "-- Script de animação: " .. animType,
+        "local Animation = {}",
+        "Animation.Name = '" .. animType .. "'",
+        "Animation.Keyframes = {}"
+    }
+    for _, kf in ipairs(keyframes) do
+        table.insert(scriptLines, string.format("Animation.Keyframes[%d] = {Time = %.2f, Value = %s}", _, kf.time, HttpService:JSONEncode(kf.data)))
+    end
+    table.insert(scriptLines, "return Animation")
+    return table.concat(scriptLines, "
+")
+end
+
+-- Mostrar script na tela, atualizar título e exibir o frame
+local function showScript(animType)
+    playClick()
+    scriptTitle.Text = "Script: " .. animType
+    scriptTextBox.Text = generateAnimationScript(animType)
+    scriptFrame.Visible = true
+end
+
+for animName, btn in pairs(animButtons) do
+    btn.MouseButton1Click:Connect(function()
+        showScript(animName)
+    end)
+end
+
+scriptClose.MouseButton1Click:Connect(function()
+    playClick()
+    scriptFrame.Visible = false
+end)
